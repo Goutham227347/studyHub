@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Browse Materials{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
+  <aside class="lg:w-72 shrink-0">
+    <div class="glass-card p-6 sticky top-24">
+      <h2 class="font-bold text-lg mb-4">Filters</h2>
+      <form method="get" id="filter-form" class="space-y-4">
+        <div>
+          <label class="text-sm text-[var(--text-muted)] block mb-1">Search</label>
+          <input type="text" name="q" value="{{ query }}" class="form-input" placeholder="Title, tags...">
+        </div>
+        <div>
+          <label class="text-sm text-[var(--text-muted)] block mb-1">Subject</label>
+          <select name="subject" class="form-input">
+            <option value="">All Subjects</option>
+            {% for s in subjects %}
+            <option value="{{ s.pk }}" {% if request.GET.subject == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-[var(--text-muted)] block mb-1">Category</label>
+          <select name="category" class="form-input">
+            <option value="">All Categories</option>
+            {% for c in categories %}
+            <option value="{{ c.pk }}" {% if request.GET.category == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-[var(--text-muted)] block mb-1">File Type</label>
+          <select name="file_type" class="form-input">
+            <option value="">All Types</option>
+            <option value="pdf" {% if request.GET.file_type == 'pdf' %}selected{% endif %}>PDF</option>
+            <option value="docx" {% if request.GET.file_type == 'docx' %}selected{% endif %}>DOCX</option>
+            <option value="ppt" {% if request.GET.file_type == 'ppt' %}selected{% endif %}>PPT</option>
+            <option value="image" {% if request.GET.file_type == 'image' %}selected{% endif %}>Image</option>
+            <option value="zip" {% if request.GET.file_type == 'zip' %}selected{% endif %}>ZIP</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-[var(--text-muted)] block mb-1">Semester</label>
+          <input type="number" name="semester" min="1" max="12" value="{{ request.GET.semester }}" class="form-input" placeholder="1-12">
+        </div>
+        <div>
+          <label class="text-sm text-[var(--text-muted)] block mb-1">Uploader</label>
+          <input type="text" name="uploader" value="{{ request.GET.uploader }}" class="form-input">
+        </div>
+        <div>
+          <label class="text-sm text-[var(--text-muted)] block mb-1">Sort</label>
+          <select name="sort" class="form-input">
+            <option value="-created_at" {% if request.GET.sort == '-created_at' or not request.GET.sort %}selected{% endif %}>Newest</option>
+            <option value="-download_count" {% if request.GET.sort == '-download_count' %}selected{% endif %}>Most Downloaded</option>
+            <option value="-view_count" {% if request.GET.sort == '-view_count' %}selected{% endif %}>Most Viewed</option>
+            <option value="title" {% if request.GET.sort == 'title' %}selected{% endif %}>Title A-Z</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary w-full">Apply Filters</button>
+        <a href="{% url 'materials:browse' %}" class="btn-ghost w-full block text-center mt-2">Clear</a>
+      </form>
+    </div>
+  </aside>
+
+  <div class="flex-1">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">Browse Materials</h1>
+      <span class="text-sm text-[var(--text-muted)]">{{ page_obj.paginator.count }} results</span>
+    </div>
+
+    <div id="material-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+      {% for material in materials %}
+      {% include 'components/material_card.html' %}
+      {% empty %}
+      <div class="col-span-full glass-card p-12 text-center text-[var(--text-muted)]">
+        <p class="text-lg mb-4">No materials found</p>
+        <a href="{% url 'materials:upload' %}" class="btn-primary">Upload the first one</a>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="flex items-center justify-center gap-2 mt-10 flex-wrap" aria-label="Pagination">
+      {% if page_obj.has_previous %}
+      <a href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" class="btn-ghost text-sm">Previous</a>
+      {% endif %}
+      <span class="text-sm text-[var(--text-muted)] px-3">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </span>
+      {% if page_obj.has_next %}
+      <a href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" class="btn-primary text-sm">Next</a>
+      {% endif %}
+    </nav>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

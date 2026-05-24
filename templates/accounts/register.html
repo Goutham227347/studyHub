@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto px-4 py-16">
+  <div class="glass-card p-8">
+    <h1 class="text-2xl font-bold mb-6 text-center gradient-text">Join StudyHub</h1>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {% for field in form %}
+      <div>
+        <label class="text-sm text-[var(--text-muted)] block mb-1">{{ field.label }}</label>
+        <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.name }}"
+          class="form-input" {% if field.field.required %}required{% endif %}>
+        {% if field.help_text %}<p class="text-xs text-[var(--text-muted)] mt-1">{{ field.help_text }}</p>{% endif %}
+        {% if field.errors %}<p class="text-red-400 text-xs mt-1">{{ field.errors.0 }}</p>{% endif %}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn-primary w-full py-3">Create Account</button>
+    </form>
+    <p class="text-center text-sm mt-4">Have an account? <a href="{% url 'accounts:login' %}" class="text-purple-400">Login</a></p>
+  </div>
+</div>
+{% endblock %}

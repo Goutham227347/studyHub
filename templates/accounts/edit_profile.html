@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Edit Profile{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto px-4 py-12">
+  <div class="glass-card p-8">
+    <h1 class="text-2xl font-bold mb-6">Edit Profile</h1>
+    <form method="post" enctype="multipart/form-data" class="space-y-4">
+      {% csrf_token %}
+      {% for field in form %}
+      <div>
+        <label class="text-sm text-[var(--text-muted)] block mb-1">{{ field.label }}</label>
+        {% if field.field.widget.input_type == 'file' %}
+        <input type="file" name="{{ field.name }}" class="form-input">
+        {% elif field.field.widget.input_type == 'select' or field.name == 'theme_preference' %}
+        <select name="{{ field.name }}" class="form-input">
+          {% for val, label in field.field.choices %}
+          <option value="{{ val }}" {% if field.value == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        {% elif field.field.widget.input_type == 'textarea' %}
+        <textarea name="{{ field.name }}" rows="4" class="form-input">{{ field.value|default:'' }}</textarea>
+        {% else %}
+        <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.name }}" value="{{ field.value|default:'' }}" class="form-input">
+        {% endif %}
+        {% if field.errors %}<p class="text-red-400 text-xs">{{ field.errors.0 }}</p>{% endif %}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn-primary w-full py-3">Save Changes</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

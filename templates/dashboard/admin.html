@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <h1 class="text-2xl font-bold mb-8 gradient-text">Admin Analytics</h1>
+  <div class="bento-grid mb-10">
+    <div class="bento-span-3 glass-card p-5 text-center">
+      <p class="text-2xl font-bold">{{ stats.total_users }}</p>
+      <p class="text-xs text-[var(--text-muted)]">Total Users</p>
+    </div>
+    <div class="bento-span-3 glass-card p-5 text-center">
+      <p class="text-2xl font-bold">{{ stats.new_users_week }}</p>
+      <p class="text-xs text-[var(--text-muted)]">New This Week</p>
+    </div>
+    <div class="bento-span-3 glass-card p-5 text-center">
+      <p class="text-2xl font-bold">{{ stats.total_materials }}</p>
+      <p class="text-xs text-[var(--text-muted)]">Total Materials</p>
+    </div>
+    <div class="bento-span-3 glass-card p-5 text-center">
+      <p class="text-2xl font-bold text-yellow-400">{{ stats.pending_materials }}</p>
+      <p class="text-xs text-[var(--text-muted)]">Pending Review</p>
+    </div>
+    <div class="bento-span-6 glass-card p-5 text-center">
+      <p class="text-2xl font-bold">{{ stats.total_downloads }}</p>
+      <p class="text-xs text-[var(--text-muted)]">Total Downloads</p>
+    </div>
+    <div class="bento-span-6 glass-card p-5 text-center">
+      <p class="text-2xl font-bold">{{ stats.downloads_week }}</p>
+      <p class="text-xs text-[var(--text-muted)]">Downloads This Week</p>
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-8 mb-10">
+    <div class="glass-card p-6">
+      <h3 class="font-bold mb-4">Uploads (7 days)</h3>
+      <canvas id="uploadsChart" height="200"></canvas>
+    </div>
+    <div class="glass-card p-6">
+      <h3 class="font-bold mb-4">New Users (7 days)</h3>
+      <canvas id="usersChart" height="200"></canvas>
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-8">
+    <div class="glass-card p-6">
+      <h3 class="font-bold mb-4">Most Downloaded</h3>
+      <ul class="space-y-2">
+        {% for m in most_downloaded %}
+        <li class="flex justify-between text-sm">
+          <a href="{{ m.get_absolute_url }}" class="hover:text-purple-400 truncate flex-1">{{ m.title }}</a>
+          <span class="text-[var(--text-muted)] ml-2">{{ m.download_count }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="glass-card p-6">
+      <h3 class="font-bold mb-4 text-red-400">Reported Materials</h3>
+      <ul class="space-y-3">
+        {% for r in reported %}
+        <li class="text-sm border-b border-[var(--border-glass)] pb-2">
+          <a href="{{ r.material.get_absolute_url }}" class="font-medium hover:text-purple-400">{{ r.material.title }}</a>
+          <p class="text-[var(--text-muted)]">{{ r.get_reason_display }} — by {{ r.reported_by.username }}</p>
+        </li>
+        {% empty %}
+        <li class="text-[var(--text-muted)]">No pending reports</li>
+        {% endfor %}
+      </ul>
+      <a href="{% url 'dashboard:moderate' %}" class="btn-ghost text-sm mt-4 inline-block">Moderate →</a>
+    </div>
+  </div>
+</div>
+<script>
+const chartOpts = { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: '#9ca3b8' } }, x: { ticks: { color: '#9ca3b8' } } } };
+new Chart(document.getElementById('uploadsChart'), {
+  type: 'bar',
+  data: {
+    labels: [{% for d in uploads_by_day %}'{{ d.day }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+    datasets: [{ data: [{% for d in uploads_by_day %}{{ d.count }}{% if not forloop.last %},{% endif %}{% endfor %}], backgroundColor: 'rgba(139,92,246,0.6)', borderRadius: 8 }]
+  },
+  options: chartOpts
+});
+new Chart(document.getElementById('usersChart'), {
+  type: 'line',
+  data: {
+    labels: [{% for d in users_by_day %}'{{ d.day }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+    datasets: [{ data: [{% for d in users_by_day %}{{ d.count }}{% if not forloop.last %},{% endif %}{% endfor %}], borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,0.1)', fill: true, tension: 0.4 }]
+  },
+  options: chartOpts
+});
+</script>
+{% endblock %}

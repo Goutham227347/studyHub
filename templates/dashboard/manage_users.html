@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Manage Users{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <h1 class="text-2xl font-bold mb-6">User Management</h1>
+  <form method="get" class="mb-6 flex gap-2">
+    <input type="search" name="q" value="{{ query }}" class="form-input flex-1" placeholder="Search users...">
+    <button class="btn-primary">Search</button>
+  </form>
+  <div class="glass-card overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="border-b border-[var(--border-glass)]">
+        <tr class="text-left text-[var(--text-muted)]">
+          <th class="p-4">User</th>
+          <th class="p-4">Email</th>
+          <th class="p-4">Uploads</th>
+          <th class="p-4">Joined</th>
+          <th class="p-4">Staff</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr class="border-b border-[var(--border-glass)] hover:bg-white/5">
+          <td class="p-4"><a href="{% url 'accounts:profile' u.username %}" class="text-purple-400">{{ u.username }}</a></td>
+          <td class="p-4 text-[var(--text-secondary)]">{{ u.email }}</td>
+          <td class="p-4">{{ u.upload_count }}</td>
+          <td class="p-4 text-[var(--text-muted)]">{{ u.date_joined|date:"M d, Y" }}</td>
+          <td class="p-4">{% if u.is_staff %}✓{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

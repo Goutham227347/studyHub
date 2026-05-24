@@ -1,0 +1,29 @@
+<article class="glass-card overflow-hidden flex flex-col h-full">
+  <a href="{{ material.get_absolute_url }}" class="block">
+    {% if material.thumbnail %}
+    <img src="{{ material.thumbnail.url }}" alt="{{ material.title }}" class="material-card-thumb">
+    {% else %}
+    <div class="material-card-thumb flex items-center justify-center text-4xl opacity-40">
+      {% if material.file_type == 'pdf' %}📄{% elif material.file_type == 'ppt' %}📊{% elif material.file_type == 'zip' %}📦{% else %}📁{% endif %}
+    </div>
+    {% endif %}
+  </a>
+  <div class="p-4 flex flex-col flex-1">
+    <div class="flex items-start justify-between gap-2 mb-2">
+      <span class="file-type-badge">{{ material.get_file_type_display }}</span>
+      {% if material.semester %}<span class="text-xs text-[var(--text-muted)]">Sem {{ material.semester }}</span>{% endif %}
+    </div>
+    <h3 class="font-semibold text-[var(--text-primary)] line-clamp-2 mb-1">
+      <a href="{{ material.get_absolute_url }}" class="hover:text-purple-400 transition">{{ material.title }}</a>
+    </h3>
+    <p class="text-sm text-[var(--text-secondary)] line-clamp-2 flex-1">{{ material.description|truncatewords:15 }}</p>
+    <div class="flex items-center justify-between mt-4 pt-3 border-t border-[var(--border-glass)] text-xs text-[var(--text-muted)]">
+      <a href="{% url 'accounts:profile' material.uploaded_by.username %}" class="hover:text-purple-400">{{ material.uploaded_by.username }}</a>
+      <div class="flex gap-3">
+        <span>⬇ {{ material.download_count }}</span>
+        <span>♥ {{ material.like_count }}</span>
+        {% if material.average_rating %}<span>★ {{ material.average_rating }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+</article>

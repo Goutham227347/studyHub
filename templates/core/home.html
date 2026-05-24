@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="relative overflow-hidden py-20 px-4">
+  <div class="absolute inset-0 opacity-30 pointer-events-none" style="background: radial-gradient(ellipse at 30% 20%, rgba(139,92,246,0.25) 0%, transparent 50%), radial-gradient(ellipse at 70% 60%, rgba(6,182,212,0.15) 0%, transparent 50%);"></div>
+  <div class="max-w-4xl mx-auto text-center relative z-10">
+    <h1 class="text-4xl md:text-6xl font-bold mb-4 tracking-tight">
+      Share &amp; Discover <span class="gradient-text">Study Materials</span>
+    </h1>
+    <p class="text-lg text-[var(--text-secondary)] mb-10 max-w-2xl mx-auto">
+      Upload notes, past papers, and resources. Browse, rate, and download from students worldwide.
+    </p>
+    <div class="relative max-w-xl mx-auto" x-data="searchBox()">
+      <form action="{% url 'materials:browse' %}" method="get" class="flex gap-2">
+        <div class="relative flex-1">
+          <input type="search" name="q" x-model="query" @input="search()" @focus="showSuggestions = suggestions.length > 0" @blur="hideSuggestions()"
+            placeholder="Search by title, subject, tags..."
+            class="form-input w-full pl-12 pr-4 py-4 text-lg rounded-2xl">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">🔍</span>
+          <div x-show="showSuggestions && suggestions.length" x-cloak class="search-suggestions text-left">
+            <template x-for="s in suggestions" :key="s.url">
+              <a :href="s.url" class="block px-4 py-3 hover:bg-white/5 text-sm border-b border-[var(--border-glass)] last:border-0">
+                <span class="text-[var(--text-muted)] text-xs uppercase" x-text="s.type"></span>
+                <span x-text="s.label" class="block text-[var(--text-primary)]"></span>
+              </a>
+            </template>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary px-8 py-4 rounded-2xl">Search</button>
+      </form>
+    </div>
+    <!-- Trending subjects -->
+    <div class="flex flex-wrap justify-center gap-2 mt-8">
+      <span class="text-sm text-[var(--text-muted)] mr-2">Trending:</span>
+      {% for subject in trending_subjects %}
+      <a href="{% url 'materials:browse' %}?subject={{ subject.pk }}" class="tag-pill hover:opacity-80 transition">{{ subject.name }}</a>
+      {% empty %}
+      <span class="text-sm text-[var(--text-muted)]">Upload materials to see trends</span>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<div class="max-w-7xl mx-auto px-4 pb-20">
+  <!-- Bento Grid -->
+  <div class="bento-grid mb-12">
+    <!-- Featured -->
+    <section class="bento-span-8 glass-card p-6">
+      <h2 class="text-xl font-bold mb-4 flex items-center gap-2">✨ Featured Materials</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for material in featured %}
+        {% include 'components/material_card.html' %}
+        {% empty %}
+        {% for material in popular|slice:":3" %}
+        {% include 'components/material_card.html' %}
+        {% empty %}
+        <p class="text-[var(--text-muted)] col-span-3 py-8 text-center">No materials yet. Be the first to upload!</p>
+        {% endfor %}
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Categories -->
+    <section class="bento-span-4 glass-card p-6">
+      <h2 class="text-xl font-bold mb-4">📚 Categories</h2>
+      <div class="space-y-2">
+        {% for cat in categories %}
+        <a href="{% url 'materials:browse' %}?category={{ cat.pk }}" class="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition group">
+          <span class="flex items-center gap-2">
+            <span>{{ cat.icon|default:"📁" }}</span>
+            <span class="font-medium group-hover:text-purple-400">{{ cat.name }}</span>
+          </span>
+          <span class="text-xs text-[var(--text-muted)]">{{ cat.material_count }}</span>
+        </a>
+        {% empty %}
+        <p class="text-[var(--text-muted)] text-sm">Categories coming soon</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Popular -->
+    <section class="bento-span-6 glass-card p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">🔥 Popular Downloads</h2>
+        <a href="{% url 'materials:browse' %}?sort=-download_count" class="text-sm text-purple-400 hover:underline">View all</a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {% for material in popular|slice:":4" %}
+        {% include 'components/material_card.html' %}
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Recent -->
+    <section class="bento-span-6 glass-card p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">🕐 Recent Uploads</h2>
+        <a href="{% url 'materials:browse' %}" class="text-sm text-purple-400 hover:underline">View all</a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {% for material in recent|slice:":4" %}
+        {% include 'components/material_card.html' %}
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Top contributors -->
+    <section class="bento-span-4 glass-card p-6">
+      <h2 class="text-xl font-bold mb-4">🏆 Top Contributors</h2>
+      <ul class="space-y-3">
+        {% for c in top_contributors %}
+        <li class="flex items-center justify-between">
+          <a href="{% url 'accounts:profile' c.uploaded_by__username %}" class="font-medium hover:text-purple-400">{{ c.uploaded_by__username }}</a>
+          <span class="text-sm text-[var(--text-muted)]">{{ c.upload_count }} uploads</span>
+        </li>
+        {% empty %}
+        <li class="text-[var(--text-muted)] text-sm">No contributors yet</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <!-- Popular tags -->
+    <section class="bento-span-8 glass-card p-6">
+      <h2 class="text-xl font-bold mb-4">🏷️ Popular Tags</h2>
+      <div class="flex flex-wrap gap-2">
+        {% for tag in popular_tags %}
+        <a href="{% url 'materials:browse' %}?q={{ tag.name }}" class="tag-pill">{{ tag.name }}</a>
+        {% empty %}
+        <span class="text-[var(--text-muted)] text-sm">Tags will appear as materials are uploaded</span>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  {% if not user.is_authenticated %}
+  <div class="text-center glass-card p-10 max-w-2xl mx-auto">
+    <h3 class="text-2xl font-bold mb-2">Ready to share your notes?</h3>
+    <p class="text-[var(--text-secondary)] mb-6">Join thousands of students on StudyHub.</p>
+    <a href="{% url 'accounts:register' %}" class="btn-primary inline-block">Get Started Free</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}{{ profile_user.username }}{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <div class="glass-card p-8 mb-8 flex flex-col md:flex-row gap-6 items-start">
+    <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-3xl font-bold shrink-0 overflow-hidden">
+      {% if profile.profile_picture %}
+      <img src="{{ profile.profile_picture.url }}" alt="" class="w-full h-full object-cover">
+      {% else %}
+      {{ profile_user.username|slice:":1"|upper }}
+      {% endif %}
+    </div>
+    <div class="flex-1">
+      <h1 class="text-2xl font-bold">{{ profile.display_name }}</h1>
+      <p class="text-[var(--text-muted)]">@{{ profile_user.username }}</p>
+      {% if profile.bio %}<p class="mt-3 text-[var(--text-secondary)]">{{ profile.bio }}</p>{% endif %}
+      <div class="flex flex-wrap gap-4 mt-4 text-sm text-[var(--text-muted)]">
+        {% if profile.department %}<span>📚 {{ profile.department }}</span>{% endif %}
+        {% if profile.college_name %}<span>🏫 {{ profile.college_name }}</span>{% endif %}
+        <span>Joined {{ profile.created_at|date:"M Y" }}</span>
+      </div>
+    </div>
+    {% if is_own_profile %}
+    <a href="{% url 'accounts:edit_profile' %}" class="btn-ghost">Edit Profile</a>
+    {% endif %}
+  </div>
+
+  <h2 class="text-xl font-bold mb-4">Uploads ({{ upload_count }})</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+    {% for material in uploads %}
+    {% include 'components/material_card.html' %}
+    {% empty %}
+    <p class="text-[var(--text-muted)] col-span-3">No uploads yet</p>
+    {% endfor %}
+  </div>
+
+  {% if is_own_profile %}
+  {% if liked_materials %}
+  <h2 class="text-xl font-bold mb-4">Liked Materials</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+    {% for material in liked_materials %}
+    {% include 'components/material_card.html' %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if bookmarks %}
+  <h2 class="text-xl font-bold mb-4">Bookmarks</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+    {% for material in bookmarks %}
+    {% include 'components/material_card.html' %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if download_history %}
+  <h2 class="text-xl font-bold mb-4">Download History</h2>
+  <div class="glass-card divide-y divide-[var(--border-glass)]">
+    {% for d in download_history %}
+    <a href="{{ d.material.get_absolute_url }}" class="flex justify-between p-4 hover:bg-white/5 transition">
+      <span>{{ d.material.title }}</span>
+      <span class="text-sm text-[var(--text-muted)]">{{ d.downloaded_at|date:"M d, Y" }}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

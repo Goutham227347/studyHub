@@ -1,0 +1,85 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="{% if user.is_authenticated %}{{ user.profile.theme_preference }}{% else %}dark{% endif %}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}StudyHub{% endblock %} | Study Material Sharing</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/studyhub.css' %}">
+  <script src="{% static 'js/studyhub.js' %}"></script>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="antialiased" x-data>
+  {% csrf_token %}
+  <!-- Navbar -->
+  <nav class="navbar-glass sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="{% url 'core:home' %}" class="flex items-center gap-2 font-bold text-xl">
+          <span class="gradient-text">StudyHub</span>
+        </a>
+        <div class="hidden md:flex items-center gap-6">
+          <a href="{% url 'core:home' %}" class="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition">Home</a>
+          <a href="{% url 'materials:browse' %}" class="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition">Browse</a>
+          <a href="{% url 'core:about' %}" class="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition">About</a>
+        </div>
+        <div class="flex items-center gap-3">
+          <button @click="$dispatch('theme-toggle')" x-data="themeToggle()" @click.prevent="toggle()" class="btn-ghost p-2 text-sm" title="Toggle theme">
+            <span x-show="document.documentElement.getAttribute('data-theme') !== 'light'">☀️</span>
+            <span x-show="document.documentElement.getAttribute('data-theme') === 'light'">🌙</span>
+          </button>
+          {% if user.is_authenticated %}
+          <a href="{% url 'dashboard:notifications' %}" class="relative btn-ghost p-2">
+            🔔
+            {% if unread_notifications %}
+            <span class="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 rounded-full text-[10px] flex items-center justify-center">{{ unread_notifications }}</span>
+            {% endif %}
+          </a>
+          <a href="{% url 'dashboard:user' %}" class="btn-ghost text-sm">Dashboard</a>
+          <a href="{% url 'accounts:profile' user.username %}" class="btn-ghost text-sm">{{ user.username }}</a>
+          <form method="post" action="{% url 'accounts:logout' %}" class="inline">{% csrf_token %}
+            <button type="submit" class="btn-ghost text-sm">Logout</button>
+          </form>
+          {% else %}
+          <a href="{% url 'accounts:login' %}" class="btn-ghost text-sm">Login</a>
+          <a href="{% url 'accounts:register' %}" class="btn-primary text-sm">Sign Up</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Messages / Toasts -->
+  {% if messages %}
+  <div class="toast-container" x-data="toast()" x-init="{% for message in messages %}show('{{ message|escapejs }}', '{{ message.tags }}'){% endfor %}">
+    <template x-for="m in messages" :key="m.id">
+      <div class="glass-card px-4 py-3 mb-2 text-sm" x-text="m.msg" :class="m.type === 'error' ? 'border-red-500/50' : 'border-green-500/50'"></div>
+    </template>
+  </div>
+  {% endif %}
+
+  <main class="min-h-[calc(100vh-4rem)]">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="border-t border-[var(--border-glass)] mt-16 py-10">
+    <div class="max-w-7xl mx-auto px-4 text-center text-[var(--text-muted)] text-sm">
+      <p class="gradient-text font-semibold text-lg mb-2">StudyHub</p>
+      <p>Share knowledge. Learn together.</p>
+      <p class="mt-4">&copy; {% now "Y" %} StudyHub. Built for students.</p>
+    </div>
+  </footer>
+
+  {% if user.is_authenticated %}
+  <a href="{% url 'materials:upload' %}" class="floating-upload" title="Upload material">
+    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+  </a>
+  {% endif %}
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

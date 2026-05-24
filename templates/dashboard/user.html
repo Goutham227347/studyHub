@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
+  <aside class="sidebar-dashboard glass-card rounded-2xl p-6 lg:sticky lg:top-24 h-fit">
+    <h2 class="font-bold text-lg mb-6 gradient-text">Dashboard</h2>
+    <nav class="space-y-2">
+      <a href="{% url 'dashboard:user' %}" class="block px-4 py-2 rounded-xl bg-purple-500/20 text-purple-300 font-medium">Overview</a>
+      <a href="{% url 'materials:upload' %}" class="block px-4 py-2 rounded-xl hover:bg-white/5 transition">Upload Material</a>
+      <a href="{% url 'accounts:profile' user.username %}" class="block px-4 py-2 rounded-xl hover:bg-white/5 transition">My Profile</a>
+      <a href="{% url 'accounts:edit_profile' %}" class="block px-4 py-2 rounded-xl hover:bg-white/5 transition">Settings</a>
+      <a href="{% url 'dashboard:notifications' %}" class="block px-4 py-2 rounded-xl hover:bg-white/5 transition">Notifications</a>
+      {% if user.is_staff %}
+      <hr class="border-[var(--border-glass)] my-4">
+      <a href="{% url 'dashboard:admin' %}" class="block px-4 py-2 rounded-xl hover:bg-white/5 text-cyan-400">Admin Analytics</a>
+      <a href="{% url 'dashboard:moderate' %}" class="block px-4 py-2 rounded-xl hover:bg-white/5">Moderation</a>
+      <a href="{% url 'dashboard:manage_users' %}" class="block px-4 py-2 rounded-xl hover:bg-white/5">Users</a>
+      {% endif %}
+    </nav>
+  </aside>
+
+  <div class="flex-1">
+    <h1 class="text-2xl font-bold mb-8">Welcome, {{ user.username }} 👋</h1>
+    <div class="bento-grid mb-10">
+      <div class="bento-span-4 glass-card p-6 text-center">
+        <p class="text-3xl font-bold gradient-text">{{ total_uploads }}</p>
+        <p class="text-sm text-[var(--text-muted)] mt-1">Total Uploads</p>
+      </div>
+      <div class="bento-span-4 glass-card p-6 text-center">
+        <p class="text-3xl font-bold gradient-text">{{ total_downloads }}</p>
+        <p class="text-sm text-[var(--text-muted)] mt-1">Downloads Received</p>
+      </div>
+      <div class="bento-span-4 glass-card p-6 text-center">
+        <p class="text-3xl font-bold gradient-text">{{ total_likes }}</p>
+        <p class="text-sm text-[var(--text-muted)] mt-1">Likes Received</p>
+      </div>
+    </div>
+
+    <h2 class="text-xl font-bold mb-4">Recent Uploads</h2>
+    <div class="glass-card divide-y divide-[var(--border-glass)] mb-10">
+      {% for m in recent_uploads %}
+      <a href="{{ m.get_absolute_url }}" class="flex justify-between p-4 hover:bg-white/5">
+        <span>{{ m.title }}</span>
+        <span class="text-sm text-[var(--text-muted)]">{{ m.get_status_display }}</span>
+      </a>
+      {% empty %}
+      <p class="p-6 text-[var(--text-muted)]">No uploads yet. <a href="{% url 'materials:upload' %}" class="text-purple-400">Upload now</a></p>
+      {% endfor %}
+    </div>
+
+    <h2 class="text-xl font-bold mb-4">Recent Downloads on Your Materials</h2>
+    <div class="glass-card divide-y divide-[var(--border-glass)]">
+      {% for d in recent_downloads %}
+      <div class="flex justify-between p-4">
+        <span>{{ d.user.username }} downloaded <a href="{{ d.material.get_absolute_url }}" class="text-purple-400">{{ d.material.title }}</a></span>
+        <span class="text-sm text-[var(--text-muted)]">{{ d.downloaded_at|timesince }} ago</span>
+      </div>
+      {% empty %}
+      <p class="p-6 text-[var(--text-muted)]">No downloads yet</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}{{ material.title }}{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <div class="grid lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 space-y-6">
+      <div class="glass-card p-8">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span class="file-type-badge">{{ material.get_file_type_display }}</span>
+          {% if material.category %}<span class="tag-pill">{{ material.category.name }}</span>{% endif %}
+          {% if material.subject %}<span class="tag-pill">{{ material.subject.name }}</span>{% endif %}
+        </div>
+        <h1 class="text-3xl font-bold mb-4">{{ material.title }}</h1>
+        <p class="text-[var(--text-secondary)] leading-relaxed mb-6">{{ material.description }}</p>
+        <div class="flex flex-wrap gap-2 mb-6">
+          {% for tag in material.tags.all %}
+          <a href="{% url 'materials:browse' %}?q={{ tag.name }}" class="tag-pill">{{ tag.name }}</a>
+          {% endfor %}
+        </div>
+        <div class="flex flex-wrap items-center gap-4 text-sm text-[var(--text-muted)]">
+          <span>By <a href="{% url 'accounts:profile' material.uploaded_by.username %}" class="text-purple-400">{{ material.uploaded_by.username }}</a></span>
+          <span>{{ material.created_at|date:"M d, Y" }}</span>
+          <span>{{ material.file_size_display }}</span>
+          <span>{{ material.view_count }} views</span>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="glass-card p-6">
+        <h2 class="font-bold mb-4">Preview</h2>
+        {% if material.thumbnail %}
+        <img src="{{ material.thumbnail.url }}" alt="Preview" class="rounded-xl max-h-96 mx-auto">
+        {% elif material.file_type == 'image' %}
+        <img src="{{ material.file.url }}" alt="Preview" class="rounded-xl max-h-96 mx-auto">
+        {% else %}
+        <div class="text-center py-16 text-[var(--text-muted)]">
+          <span class="text-6xl block mb-4">{% if material.file_type == 'pdf' %}📄{% else %}📁{% endif %}</span>
+          <p>Preview not available for this file type</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Comments -->
+      <div id="comments" class="glass-card p-6">
+        <h2 class="font-bold text-xl mb-6">Comments ({{ material.comments.count }})</h2>
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'interactions:comment' material.slug %}" class="mb-8">
+          {% csrf_token %}
+          {{ comment_form.body }}
+          <button type="submit" class="btn-primary mt-3">Post Comment</button>
+        </form>
+        {% endif %}
+        <div class="space-y-6">
+          {% for comment in comments %}
+          <div class="border-b border-[var(--border-glass)] pb-4">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="font-semibold">{{ comment.user.username }}</span>
+              <span class="text-xs text-[var(--text-muted)]">{{ comment.created_at|timesince }} ago</span>
+            </div>
+            <p class="text-[var(--text-secondary)]">{{ comment.body }}</p>
+            {% if user.is_authenticated %}
+            <button class="text-xs text-purple-400 mt-2" onclick="document.getElementById('reply-{{ comment.pk }}').classList.toggle('hidden')">Reply</button>
+            <form id="reply-{{ comment.pk }}" method="post" action="{% url 'interactions:comment' material.slug %}" class="hidden mt-3">
+              {% csrf_token %}
+              <input type="hidden" name="parent_id" value="{{ comment.pk }}">
+              <textarea name="body" rows="2" class="form-input" placeholder="Write a reply..."></textarea>
+              <button type="submit" class="btn-ghost text-sm mt-2">Reply</button>
+            </form>
+            {% endif %}
+            {% for reply in comment.replies.all %}
+            <div class="ml-8 mt-4 pl-4 border-l border-[var(--border-glass)]">
+              <span class="font-semibold text-sm">{{ reply.user.username }}</span>
+              <p class="text-sm text-[var(--text-secondary)] mt-1">{{ reply.body }}</p>
+            </div>
+            {% endfor %}
+          </div>
+          {% empty %}
+          <p class="text-[var(--text-muted)]">No comments yet. Be the first!</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar actions -->
+    <div class="space-y-4">
+      <div class="glass-card p-6 sticky top-24">
+        <a href="{% url 'materials:download' material.slug %}" class="btn-primary w-full block text-center mb-4 py-3">
+          ⬇ Download ({{ material.download_count }})
+        </a>
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'interactions:like' material.slug %}" class="mb-3">
+          {% csrf_token %}
+          <button type="submit" class="btn-ghost w-full {% if user_liked %}text-pink-400{% endif %}">
+            ♥ {% if user_liked %}Liked{% else %}Like{% endif %} ({{ material.like_count }})
+          </button>
+        </form>
+        <form method="post" action="{% url 'interactions:bookmark' material.slug %}" class="mb-3">
+          {% csrf_token %}
+          <button type="submit" class="btn-ghost w-full">🔖 {% if user_bookmarked %}Bookmarked{% else %}Bookmark{% endif %}</button>
+        </form>
+        <!-- Rating -->
+        <form method="post" action="{% url 'interactions:rate' material.slug %}" class="mb-4">
+          {% csrf_token %}
+          <p class="text-sm text-[var(--text-muted)] mb-2">Rate (avg: {{ material.average_rating|default:"—" }})</p>
+          <div class="star-rating flex flex-row-reverse justify-end gap-1">
+            {% for i in "54321" %}
+            <input type="radio" name="score" id="star{{ i }}" value="{{ i }}" {% if user_rating.score == i|add:0 %}checked{% endif %}>
+            <label for="star{{ i }}" onclick="this.closest('form').submit()">★</label>
+            {% endfor %}
+          </div>
+        </form>
+        {% endif %}
+      </div>
+
+      <!-- Related -->
+      <div class="glass-card p-6">
+        <h3 class="font-bold mb-4">Related Materials</h3>
+        <ul class="space-y-3">
+          {% for r in related %}
+          <li><a href="{{ r.get_absolute_url }}" class="text-sm hover:text-purple-400 line-clamp-2">{{ r.title }}</a></li>
+          {% empty %}
+          <li class="text-sm text-[var(--text-muted)]">None found</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

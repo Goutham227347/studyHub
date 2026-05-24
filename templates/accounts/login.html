@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto px-4 py-16">
+  <div class="glass-card p-8">
+    <h1 class="text-2xl font-bold mb-6 text-center gradient-text">Welcome Back</h1>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {% for field in form %}
+      <div>
+        <label class="text-sm text-[var(--text-muted)] block mb-1">{{ field.label }}</label>
+        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" id="{{ field.id_for_label }}"
+          value="{{ field.value|default:'' }}" class="form-input" {% if field.field.required %}required{% endif %}>
+        {% if field.errors %}<p class="text-red-400 text-xs mt-1">{{ field.errors.0 }}</p>{% endif %}
+      </div>
+      {% endfor %}
+      <button type="submit" class="btn-primary w-full py-3">Sign In</button>
+    </form>
+    <p class="text-center text-sm text-[var(--text-muted)] mt-6">
+      <a href="{% url 'accounts:password_reset' %}" class="text-purple-400 hover:underline">Forgot password?</a>
+    </p>
+    <p class="text-center text-sm mt-4">No account? <a href="{% url 'accounts:register' %}" class="text-purple-400 hover:underline">Register</a></p>
+  </div>
+</div>
+{% endblock %}

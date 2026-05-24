@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Upload Material{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-12">
+  <div class="glass-card p-8">
+    <h1 class="text-2xl font-bold mb-2 gradient-text">Upload Study Material</h1>
+    <p class="text-[var(--text-secondary)] mb-8">Share notes, PDFs, presentations, and more with fellow students.</p>
+
+    <form method="post" enctype="multipart/form-data" x-data="fileDrop()" id="upload-form">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      <div class="text-red-400 text-sm mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30">
+        {{ form.non_field_errors }}
+      </div>
+      {% endif %}
+
+      <div class="space-y-5">
+        <div>
+          <label for="id_title" class="text-sm font-medium mb-1 block">Title *</label>
+          {{ form.title }}
+          {% if form.title.errors %}<p class="text-red-400 text-xs mt-1">{{ form.title.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div>
+          <label for="id_description" class="text-sm font-medium mb-1 block">Description *</label>
+          {{ form.description }}
+          {% if form.description.errors %}<p class="text-red-400 text-xs mt-1">{{ form.description.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="id_subject" class="text-sm font-medium mb-1 block">Subject (optional)</label>
+            {{ form.subject }}
+            {% if form.subject.errors %}<p class="text-red-400 text-xs mt-1">{{ form.subject.errors.0 }}</p>{% endif %}
+          </div>
+          <div>
+            <label for="id_category" class="text-sm font-medium mb-1 block">Category (optional)</label>
+            {{ form.category }}
+            {% if form.category.errors %}<p class="text-red-400 text-xs mt-1">{{ form.category.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+
+        {% if not form.fields.subject.queryset and not form.fields.category.queryset %}
+        <p class="text-sm text-amber-400/90 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+          No categories loaded yet. Run <code class="text-xs">python manage.py seed_data</code> or upload without them.
+        </p>
+        {% endif %}
+
+        <div>
+          <label for="id_semester" class="text-sm font-medium mb-1 block">Semester (optional)</label>
+          {{ form.semester }}
+        </div>
+
+        <div>
+          <label for="id_tags_input" class="text-sm font-medium mb-1 block">Tags (comma-separated)</label>
+          {{ form.tags_input }}
+        </div>
+
+        <div>
+          <label class="text-sm font-medium mb-1 block">File *</label>
+          <div class="drop-zone" :class="{ 'drag-over': dragOver }"
+            @dragover.prevent="dragOver = true"
+            @dragleave.prevent="dragOver = false"
+            @drop.prevent="handleDrop($event, 'id_file')">
+            <input type="file" name="file" id="id_file" required
+              @change="handleSelect($event)"
+              accept=".pdf,.docx,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.webp,.zip"
+              class="block w-full text-sm text-[var(--text-secondary)] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-purple-500/20 file:text-purple-300 file:cursor-pointer">
+            <p class="text-sm text-[var(--text-muted)] mt-3 text-center">or drag & drop here</p>
+            <p x-show="fileName" x-text="'Selected: ' + fileName" class="text-purple-400 mt-2 text-sm text-center"></p>
+          </div>
+          {% if form.file.errors %}<p class="text-red-400 text-xs mt-1">{{ form.file.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div>
+          <label for="id_thumbnail" class="text-sm font-medium mb-1 block">Thumbnail (optional)</label>
+          {{ form.thumbnail }}
+        </div>
+
+        <button type="submit" class="btn-primary w-full py-3">Upload Material</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
