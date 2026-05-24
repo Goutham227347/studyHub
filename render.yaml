@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: studyhub
+    env: python
+    region: ohio
+    plan: free
+    pythonVersion: 3.14.3
+    
+    # Install dependencies BEFORE running build command
+    preStartCommand: "pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput"
+    
+    # Start command
+    startCommand: "gunicorn config.wsgi:application"
+    
+    # Environment variables
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: USE_SQLITE
+        value: "False"
